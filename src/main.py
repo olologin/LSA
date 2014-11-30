@@ -54,7 +54,6 @@ def tf_idf(articles):
     idx2ArticleInfo = [None]*D
 
     matrix = np.zeros((len(word2idx), D), dtype='d')
-    TFmatrix = np.zeros((len(word2idx), D), dtype='d')
     for idx, (themeid, articlename, articleid, text) in enumerate(articles):
         idx2ArticleInfo[idx] = (themeid, articlename, articleid)
         listOfWords = text.split()
@@ -62,14 +61,13 @@ def tf_idf(articles):
             TF = float(listOfWords.count(word))/len(listOfWords)
             IDF = np.log(float(D)/howMuchArticlesWithWord[word])
             matrix[word2idx[word], idx] = TF*IDF
-            TFmatrix[word2idx[word], idx] = listOfWords.count(word)
 
 
     idx2word = [None]*len(word2idx)
     for k, v in word2idx.items():
         idx2word[v] = k
 
-    return matrix, idx2word, idx2ArticleInfo, TFmatrix+1
+    return matrix, idx2word, idx2ArticleInfo
 
 def printMostRelevantWordsToArticles(matrix, idx2word, idx2ArticleInfo):
     for idx, (themeid, articlename, articleid) in enumerate(idx2ArticleInfo):
@@ -85,10 +83,9 @@ def getReversedIndex(U, Vh):
             res[rowIdx, colIdx] = cosineDistance(U[rowIdx,:].flatten(), Vh[:,colIdx].flatten())
     return res
 
-def searchByWords(reversedIndex, idx2ArticleInfo, idx2word, searchString, tfidfmatrix):
+def searchByWords(reversedIndex, idx2ArticleInfo, idx2word, searchString):
     stemmedSearchString = stem(searchString)
     distances = np.zeros(len(idx2ArticleInfo))
-    occurences = np.zeros(len(idx2ArticleInfo))
     #howMuchWordsInSearchString = np.log(len(stemmedSearchString.split(' ')))
     howMuchWordsInSearchString = len(stemmedSearchString.split(' '))
     for word in stemmedSearchString.split(' '):
@@ -96,8 +93,7 @@ def searchByWords(reversedIndex, idx2ArticleInfo, idx2word, searchString, tfidfm
             continue
         wordIdx = idx2word.index(word)
         distances = distances + reversedIndex[wordIdx,:]
-        occurences = occurences + tfidfmatrix[wordIdx,:]
-    distances = distances * occurences
+    distances = distances
     res = [(idx2ArticleInfo[articleIdx], distances[articleIdx]) for articleIdx in reversed(distances.argsort()[-4:])]
     return res
 
@@ -137,7 +133,7 @@ if __name__ == "__main__":
     grabber.save_articles("../TextsStemmed/", filtered_articles)
 
     stemmed_articles = grabber.read_articles("../TextsStemmed/")
-    matrix, idx2word, idx2ArticleInfo, TFmatrix = tf_idf(stemmed_articles)
+    matrix, idx2word, idx2ArticleInfo = tf_idf(stemmed_articles)
     print("Наиболее релевантные слова к каждой статье после tf-idf:")
     printMostRelevantWordsToArticles(matrix, idx2word, idx2ArticleInfo)
     # Далее - работа самого LSA с последующим построением обратного чемпионского списка
@@ -145,21 +141,21 @@ if __name__ == "__main__":
     U,s,Vh = linalg.svd(matrix, full_matrices=False)
     plotDendrogram(Vh[0:9,:], idx2ArticleInfo)
     reversedIndex = getReversedIndex(U[:,0:9], Vh[0:9,:])
-    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "география крым", TFmatrix))
-    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "автомобиль заз", TFmatrix))
-    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "таврия", TFmatrix))
-    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "футбол", TFmatrix))
-    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "двигатель", TFmatrix))
-    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "Депутатский мандат", TFmatrix))
-    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "Двигатель внутреннего сгорания",TFmatrix))
-    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "крым",TFmatrix))
-    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "религии мира",TFmatrix))
-    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "древнее искусство",TFmatrix))
-    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "древняя медицина",TFmatrix))
-    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "страны европы",TFmatrix))
-    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "страны америки",TFmatrix))
-    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "страны азии",TFmatrix))
-    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "20-ый век",TFmatrix))
+    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "география крым"))
+    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "автомобиль заз"))
+    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "таврия"))
+    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "футбол"))
+    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "двигатель"))
+    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "Депутатский мандат"))
+    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "Двигатель внутреннего сгорания"))
+    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "крым"))
+    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "религии мира"))
+    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "древнее искусство"))
+    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "древняя медицина"))
+    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "страны европы"))
+    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "страны америки"))
+    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "страны азии"))
+    print (searchByWords(reversedIndex, idx2ArticleInfo, idx2word, "20-ый век"))
 
     pass
 
