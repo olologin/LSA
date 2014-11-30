@@ -75,7 +75,7 @@ def save_articles(path, articles):
 
 def read_articles(path):
     articles = []
-    for fileName in os.listdir(path):
+    for fileName in sorted(os.listdir(path)):
          info = fileName.replace('.txt','').split('|')
          themeid = int(info[0])
          articlename = info[1]
